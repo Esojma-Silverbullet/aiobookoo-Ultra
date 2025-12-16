@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import logging
 
-from .const import WEIGHT_BYTE1, WEIGHT_BYTE2
+from .const import UnitMass, WEIGHT_BYTE1, WEIGHT_BYTE2
 from .exceptions import BookooMessageError, BookooMessageTooLong, BookooMessageTooShort
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,25 +22,28 @@ class BookooMessage:
 
         self.timer: float | None = (
             int.from_bytes(
-                payload[3:5],
+                payload[2:5],
                 byteorder="big",  # time in milliseconds
             )
             / 1000.0  # time in seconds
         )
-        self.unit: bytes = payload[5]
+        self.unit: UnitMass = (
+            UnitMass.OUNCES if payload[5] == 0x01 else UnitMass.GRAMS
+        )
         self.weight_symbol = -1 if payload[6] == 45 else 1 if payload[6] == 43 else 0
         self.weight: float | None = (
-            int.from_bytes(payload[8:10], byteorder="big") / 100.0 * self.weight_symbol
+            int.from_bytes(payload[7:10], byteorder="big") / 100.0 * self.weight_symbol
         )  # Convert to grams
 
         self.flowSymbol = -1 if payload[10] == 45 else 1 if payload[10] == 43 else 0
         self.flow_rate = (
-            int.from_bytes(payload[12:13], byteorder="big") / 100.0 * self.flowSymbol
+            int.from_bytes(payload[11:13], byteorder="big") / 100.0 * self.flowSymbol
         )  # Convert to ml
         self.battery = payload[13]  # battery level in percent
-        self.standby_time = int.from_bytes(payload[14:15], byteorder="big")  # minutes
+        self.standby_time = int.from_bytes(payload[14:16], byteorder="big")  # minutes
         self.buzzer_gear = payload[16]
         self.flow_rate_smoothing = payload[17]  # 0 = off, 1 = on
+        self.stop_condition = payload[18]
 
         # Verify checksum
         checksum = 0
