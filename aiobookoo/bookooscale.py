@@ -16,6 +16,8 @@ from bleak.exc import BleakDeviceNotFoundError, BleakError
 from .const import (
     CHARACTERISTIC_UUID_WEIGHT,
     CHARACTERISTIC_UUID_COMMAND,
+    CMD_BYTE1_PRODUCT_NUMBER,
+    CMD_BYTE2_TYPE,
 )
 from .exceptions import (
     BookooDeviceNotFound,
@@ -38,6 +40,8 @@ class BookooDeviceState:
     units: UnitMass
     buzzer_gear: int = 0
     auto_off_time: int = 0
+    flow_rate_smoothing: int = 0
+    stop_condition: int = 0
 
 
 class BookooScale:
@@ -45,14 +49,6 @@ class BookooScale:
 
     _weight_char_id = CHARACTERISTIC_UUID_WEIGHT
     _command_char_id = CHARACTERISTIC_UUID_COMMAND
-
-    _msg_types = {
-        "tare": bytearray([0x03, 0x0A, 0x01, 0x00, 0x00, 0x08]),
-        "startTimer": bytearray([0x03, 0x0A, 0x04, 0x00, 0x00, 0x0A]),
-        "stopTimer": bytearray([0x03, 0x0A, 0x05, 0x00, 0x00, 0x0D]),
-        "resetTimer": bytearray([0x03, 0x0A, 0x06, 0x00, 0x00, 0x0C]),
-        "tareAndStartTime": bytearray([0x03, 0x0A, 0x07, 0x00, 0x00, 0x00]),
-    }
 
     def __init__(
         self,
@@ -82,6 +78,8 @@ class BookooScale:
         self._weight: float | None = None
         self._timer: float | None = None
         self._flow_rate: float | None = None
+        self._flow_rate_smoothing: int | None = None
+        self._stop_condition: int | None = None
 
         # queue
         self._queue: asyncio.Queue = asyncio.Queue()
@@ -90,6 +88,14 @@ class BookooScale:
         self._last_short_msg: bytearray | None = None
 
         self._notify_callback: Callable[[], None] | None = notify_callback
+
+        self._msg_types = {
+            "tare": self._build_command(0x01),
+            "startTimer": self._build_command(0x04),
+            "stopTimer": self._build_command(0x05),
+            "resetTimer": self._build_command(0x06),
+            "tareAndStartTime": self._build_command(0x07),
+        }
 
     @property
     def mac(self) -> str:
@@ -189,6 +195,25 @@ class BookooScale:
                 self.connected = False
                 _LOGGER.debug("Error writing to device: %s", ex)
                 return
+
+    @staticmethod
+    def _build_command(data1: int, data2: int = 0x00, data3: int = 0x00) -> bytearray:
+        """Construct a command with checksum for the Ultra protocol."""
+
+        base = bytearray(
+            [
+                CMD_BYTE1_PRODUCT_NUMBER,
+                CMD_BYTE2_TYPE,
+                data1 & 0xFF,
+                data2 & 0xFF,
+                data3 & 0xFF,
+            ]
+        )
+        checksum = 0
+        for byte in base:
+            checksum ^= byte
+        base.append(checksum)
+        return base
 
     async def connect(
         self,
@@ -323,6 +348,84 @@ class BookooScale:
                 (self._command_char_id, self._msg_types["resetTimer"])
             )
 
+    async def set_beep_level(self, level: int) -> None:
+        """Set the beeper volume (0-5)."""
+
+        if not 0 <= level <= 5:
+            raise ValueError("Beeper level must be between 0 and 5")
+
+        if not self.connected:
+            await self.connect()
+
+        _LOGGER.debug("Setting beep level to %s", level)
+
+        async with self._add_to_queue_lock:
+            await self._queue.put(
+                (self._command_char_id, self._build_command(0x02, 0x00, level))
+            )
+
+    async def set_auto_off_duration(self, minutes: int) -> None:
+        """Set the automatic shutdown duration (5-30 minutes)."""
+
+        if not 5 <= minutes <= 30:
+            raise ValueError("Auto-off duration must be between 5 and 30 minutes")
+
+        if not self.connected:
+            await self.connect()
+
+        _LOGGER.debug("Setting auto-off duration to %s minutes", minutes)
+
+        async with self._add_to_queue_lock:
+            await self._queue.put(
+                (self._command_char_id, self._build_command(0x03, 0x00, minutes))
+            )
+
+    async def set_flow_rate_smoothing(self, enabled: bool) -> None:
+        """Enable or disable flow rate smoothing."""
+
+        if not self.connected:
+            await self.connect()
+
+        _LOGGER.debug("Setting flow rate smoothing to %s", enabled)
+
+        async with self._add_to_queue_lock:
+            await self._queue.put(
+                (
+                    self._command_char_id,
+                    self._build_command(0x08, 0x01 if enabled else 0x00, 0x00),
+                )
+            )
+
+    async def calibrate(self) -> None:
+        """Start calibration."""
+
+        if not self.connected:
+            await self.connect()
+
+        _LOGGER.debug("Sending calibration command")
+
+        async with self._add_to_queue_lock:
+            await self._queue.put((self._command_char_id, self._build_command(0x09)))
+
+    async def set_auto_mode_stop_condition(self, on_container_removed: bool) -> None:
+        """Set stop condition for automatic mode."""
+
+        if not self.connected:
+            await self.connect()
+
+        _LOGGER.debug(
+            "Setting auto-mode stop condition to %s",
+            "container removed" if on_container_removed else "flow stopped",
+        )
+
+        async with self._add_to_queue_lock:
+            await self._queue.put(
+                (
+                    self._command_char_id,
+                    self._build_command(0x0B, 0x01 if on_container_removed else 0x00),
+                )
+            )
+
     async def on_bluetooth_data_received(
         self,
         characteristic: BleakGATTCharacteristic,  # pylint: disable=unused-argument
@@ -348,11 +451,15 @@ class BookooScale:
             self._weight = msg.weight
             self._timer = msg.timer
             self._flow_rate = msg.flow_rate
+            self._flow_rate_smoothing = msg.flow_rate_smoothing
+            self._stop_condition = msg.stop_condition
             self._device_state = BookooDeviceState(
                 battery_level=msg.battery,
-                units=UnitMass("grams"),
+                units=msg.unit,
                 buzzer_gear=msg.buzzer_gear,
                 auto_off_time=msg.standby_time,
+                flow_rate_smoothing=msg.flow_rate_smoothing,
+                stop_condition=msg.stop_condition,
             )
 
         if self._notify_callback is not None:
