@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import logging
 
-from .const import WEIGHT_BYTE1, WEIGHT_BYTE2
+from .const import UnitMass, WEIGHT_BYTE1, WEIGHT_BYTE2
 from .exceptions import BookooMessageError, BookooMessageTooLong, BookooMessageTooShort
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,25 +22,37 @@ class BookooMessage:
 
         self.timer: float | None = (
             int.from_bytes(
-                payload[3:5],
+                payload[2:5],
                 byteorder="big",  # time in milliseconds
             )
             / 1000.0  # time in seconds
         )
-        self.unit: bytes = payload[5]
-        self.weight_symbol = -1 if payload[6] == 45 else 1 if payload[6] == 43 else 0
-        self.weight: float | None = (
-            int.from_bytes(payload[8:10], byteorder="big") / 100.0 * self.weight_symbol
+        self.unit: UnitMass
+        if payload[5] == 0x01:
+            self.unit = UnitMass.OUNCES
+        elif payload[5] == 0x02:
+            self.unit = UnitMass.GRAMS
+        else:
+            raise BookooMessageError(payload, "Unsupported unit byte")
+
+        weight_sign = 1 if payload[6] in (0x2B, 0x00) else -1 if payload[6] == 0x2D else None
+        if weight_sign is None:
+            raise BookooMessageError(payload, "Unsupported weight sign byte")
+        self.weight = (
+            int.from_bytes(payload[7:10], byteorder="big") / 100.0 * weight_sign
         )  # Convert to grams
 
-        self.flowSymbol = -1 if payload[10] == 45 else 1 if payload[10] == 43 else 0
+        flow_sign = 1 if payload[10] in (0x2B, 0x00) else -1 if payload[10] == 0x2D else None
+        if flow_sign is None:
+            raise BookooMessageError(payload, "Unsupported flow sign byte")
         self.flow_rate = (
-            int.from_bytes(payload[12:13], byteorder="big") / 100.0 * self.flowSymbol
+            int.from_bytes(payload[11:13], byteorder="big") / 100.0 * flow_sign
         )  # Convert to ml
         self.battery = payload[13]  # battery level in percent
-        self.standby_time = int.from_bytes(payload[14:15], byteorder="big")  # minutes
+        self.standby_time = int.from_bytes(payload[14:16], byteorder="big")  # minutes
         self.buzzer_gear = payload[16]
         self.flow_rate_smoothing = payload[17]  # 0 = off, 1 = on
+        self.stop_condition = payload[18]
 
         # Verify checksum
         checksum = 0
