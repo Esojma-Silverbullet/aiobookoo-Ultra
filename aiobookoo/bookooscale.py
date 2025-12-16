@@ -117,7 +117,7 @@ class BookooScale:
         return self._weight
 
     @property
-    def timer(self) -> int:
+    def timer(self) -> float | None:
         """Return the current timer value in seconds."""
         return self._timer
 

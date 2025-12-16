@@ -27,17 +27,26 @@ class BookooMessage:
             )
             / 1000.0  # time in seconds
         )
-        self.unit: UnitMass = (
-            UnitMass.OUNCES if payload[5] == 0x01 else UnitMass.GRAMS
-        )
-        self.weight_symbol = -1 if payload[6] == 45 else 1 if payload[6] == 43 else 0
-        self.weight: float | None = (
-            int.from_bytes(payload[7:10], byteorder="big") / 100.0 * self.weight_symbol
+        self.unit: UnitMass
+        if payload[5] == 0x01:
+            self.unit = UnitMass.OUNCES
+        elif payload[5] == 0x02:
+            self.unit = UnitMass.GRAMS
+        else:
+            raise BookooMessageError(payload, "Unsupported unit byte")
+
+        weight_sign = 1 if payload[6] in (0x2B, 0x00) else -1 if payload[6] == 0x2D else None
+        if weight_sign is None:
+            raise BookooMessageError(payload, "Unsupported weight sign byte")
+        self.weight = (
+            int.from_bytes(payload[7:10], byteorder="big") / 100.0 * weight_sign
         )  # Convert to grams
 
-        self.flowSymbol = -1 if payload[10] == 45 else 1 if payload[10] == 43 else 0
+        flow_sign = 1 if payload[10] in (0x2B, 0x00) else -1 if payload[10] == 0x2D else None
+        if flow_sign is None:
+            raise BookooMessageError(payload, "Unsupported flow sign byte")
         self.flow_rate = (
-            int.from_bytes(payload[11:13], byteorder="big") / 100.0 * self.flowSymbol
+            int.from_bytes(payload[11:13], byteorder="big") / 100.0 * flow_sign
         )  # Convert to ml
         self.battery = payload[13]  # battery level in percent
         self.standby_time = int.from_bytes(payload[14:16], byteorder="big")  # minutes
