@@ -1,8 +1,12 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "aiobookoo"
-version = "0.1.0"
+name = "aiobookoo-ultra"
+version = "0.1.1"
 license = { text = "MIT" }
-description = "A bookoo port of aioacaia"
+description = "Bookoo scale client with aiobookoo_ultra compatibility for Themis/HA"
 readme = "README.md"
 authors = [
     { name = "Makerwolf", email = "160181889+makerwolf@users.noreply.github.com" },
@@ -10,7 +14,7 @@ authors = [
 maintainers = [
     { name = "Makerwolf", email = "160181889+makerwolf@users.noreply.github.com" },
 ]
-keywords = ["Bookoo", "Bluetooth", "api", "async", "client"]
+keywords = ["Bookoo", "Bluetooth", "api", "async", "client", "home-assistant", "themis"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: AsyncIO",
@@ -24,9 +28,12 @@ dependencies = ["bleak >= 0.20.2"]
 requires-python = ">= 3.12"
 
 [project.urls]
-Homepage = "https://github.com/makerwolf/aiobookoo"
-Repository = "https://github.com/makerwolf/aiobookoo"
-Documentation = "https://github.com/makerwolf/aiobookoo"
+Homepage = "https://github.com/Esojma-Silverbullet/aiobookoo-Ultra"
+Repository = "https://github.com/Esojma-Silverbullet/aiobookoo-Ultra"
+Documentation = "https://github.com/Esojma-Silverbullet/aiobookoo-Ultra"
+
+[tool.setuptools.packages.find]
+include = ["aiobookoo", "aiobookoo.*", "aiobookoo_ultra", "aiobookoo_ultra.*"]
 
 [project.optional-dependencies]
 dev = [
