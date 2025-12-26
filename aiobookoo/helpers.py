@@ -8,7 +8,7 @@ from bleak.exc import BleakDeviceNotFoundError, BleakError
 from .const import CHARACTERISTIC_UUID_WEIGHT, SCALE_START_NAMES
 from .exceptions import BookooDeviceNotFound, BookooError, BookooUnknownDevice
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("aiobookoo_ultra")
 
 
 async def find_bookoo_devices(timeout=10, scanner: BleakScanner | None = None) -> list:

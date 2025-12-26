@@ -29,7 +29,7 @@ from .exceptions import (
 from .const import UnitMass
 from .decode import BookooMessage, decode
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("aiobookoo_ultra")
 
 
 @dataclass(kw_only=True)
