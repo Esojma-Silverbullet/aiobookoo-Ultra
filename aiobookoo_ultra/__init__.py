@@ -1,7 +1,7 @@
-"""Kompatibilitäts-Package für das Bookoo-Themis-Ultra-Protokoll."""
+"""Offizielles Package für das Bookoo-Themis-Ultra-Protokoll."""
 
-from aiobookoo.bookooscale import BookooDeviceState, BookooScale
-from aiobookoo.const import (
+from .bookooscale import BookooDeviceState, BookooScale
+from .const import (
     CHARACTERISTIC_UUID_COMMAND,
     CHARACTERISTIC_UUID_WEIGHT,
     CMD_BYTE1_PRODUCT_NUMBER,
@@ -12,8 +12,8 @@ from aiobookoo.const import (
     WEIGHT_BYTE1,
     WEIGHT_BYTE2,
 )
-from aiobookoo.decode import BookooMessage, decode
-from aiobookoo.exceptions import (
+from .decode import BookooMessage, decode
+from .exceptions import (
     BookooDeviceNotFound,
     BookooError,
     BookooMessageError,
@@ -22,7 +22,7 @@ from aiobookoo.exceptions import (
     BookooScaleException,
     BookooUnknownDevice,
 )
-from aiobookoo.helpers import find_bookoo_devices, is_bookoo_scale, scan
+from .helpers import find_bookoo_devices, is_bookoo_scale, scan
 
 __all__ = [
     "BookooDeviceState",
