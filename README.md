@@ -13,6 +13,11 @@ und definiert genau ein Service-/Characteristic-Set (Ultra). Kompatible Wrapper
 from aiobookoo_ultra import BookooScale
 ```
 
+Ein Legacy-Kompatibilitätswrapper (`aiobookoo`) existiert nur, damit bestehende
+Altimporte weiterlaufen. Neue Integrationen sollen ausschließlich
+`aiobookoo_ultra` verwenden; Mini-/Legacy-Protokolle gehören nicht zu diesem
+Paket.
+
 ## Installation
 
 * Veröffentlichung (PyPI): `pip install aiobookoo-ultra`
