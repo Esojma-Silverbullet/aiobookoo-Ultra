@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "aiobookoo-ultra"
 version = "0.1.1"
 license = { text = "MIT" }
-description = "Bookoo scale client with aiobookoo_ultra compatibility for Themis/HA"
+description = "Async BLE client for the Bookoo Themis Ultra scale"
 readme = "README.md"
 authors = [
     { name = "Makerwolf", email = "160181889+makerwolf@users.noreply.github.com" },
@@ -14,7 +14,7 @@ authors = [
 maintainers = [
     { name = "Makerwolf", email = "160181889+makerwolf@users.noreply.github.com" },
 ]
-keywords = ["Bookoo", "Bluetooth", "api", "async", "client", "home-assistant", "themis"]
+keywords = ["Bookoo", "Bluetooth", "api", "async", "client", "themis"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: AsyncIO",

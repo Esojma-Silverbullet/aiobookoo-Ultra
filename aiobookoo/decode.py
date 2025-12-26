@@ -6,7 +6,7 @@ import logging
 from .const import UnitMass, WEIGHT_BYTE1, WEIGHT_BYTE2
 from .exceptions import BookooMessageError, BookooMessageTooLong, BookooMessageTooShort
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("aiobookoo_ultra")
 
 
 @dataclass
@@ -14,11 +14,7 @@ class BookooMessage:
     """Representation of the contents of a Datapacket from the weight Characteristic of a Bookoo Scale."""
 
     def __init__(self, payload: bytearray) -> None:
-        """Initialize a Settings instance.
-
-        :param payload: The payload containing the settings data.
-        decode as described in https://github.com/BooKooCode/OpenSource/blob/main/bookoo_mini_scale/protocols.md
-        """
+        """Initialisiere eine Nachricht des Ultra-Protokolls."""
 
         self.timer: float | None = (
             int.from_bytes(

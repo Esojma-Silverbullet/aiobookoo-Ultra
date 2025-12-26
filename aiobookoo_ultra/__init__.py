@@ -1,10 +1,4 @@
-"""Kompatibilitäts-Package für aiobookoo.
-
-Diese Datei erlaubt Imports über ``aiobookoo_ultra`` und reicht alle
-öffentlichen Klassen/Funktionen aus dem bisherigen ``aiobookoo`` weiter.
-Dadurch funktionieren bestehende Integrationen (z.B. Themis Ultra für
-Home Assistant), ohne den Integrationscode anpassen zu müssen.
-"""
+"""Kompatibilitäts-Package für das Bookoo-Themis-Ultra-Protokoll."""
 
 from aiobookoo.bookooscale import BookooDeviceState, BookooScale
 from aiobookoo.const import (

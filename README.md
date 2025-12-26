@@ -1,14 +1,21 @@
 # aiobookoo-ultra
 
-Bookoo-Implementierung basierend auf [aioacaia](https://github.com/zweckj/aioacaia),
-`asyncio` und `bleak`. Dieses Package stellt zusätzlich den Import-Pfad
-`aiobookoo_ultra` bereit, damit die Themis-Ultra-Integration für Home Assistant
-ohne Codeänderungen funktioniert.
+Dieses Repository stellt das asynchrone BLE-Protokoll der **Bookoo Themis Ultra**
+bereit. Es dient als externe Abhängigkeit für andere Projekte und konzentriert
+sich ausschließlich auf das Ultra-Protokoll (korrekte Service- und
+Characteristic-UUIDs, Kommandoaufbau und Gewichts-Parsing).
 
-## Nutzung
+## Empfohlener Importpfad
 
-* Installation (lokal): `pip install .`
-* Import im Integrationscode: `from aiobookoo_ultra.bookooscale import BookooScale`
-  (oder weiterhin `from aiobookoo.bookooscale import BookooScale`)
-* Für Home Assistant: Das Package im `manifest.json` der Integration als
-  Abhängigkeit (`aiobookoo-ultra==0.1.1`) eintragen, damit HA das Modul bereitstellt.
+```python
+from aiobookoo_ultra import BookooScale
+```
+
+## Installation
+
+* Veröffentlichung (PyPI): `pip install aiobookoo-ultra`
+* Aus Git-Tag (0.1.1):\
+  `pip install git+https://github.com/Esojma-Silverbullet/aiobookoo-Ultra.git@0.1.1`
+
+Nach der Installation steht das Modul ohne weitere Anpassungen zur Verfügung;
+weitere Framework-spezifische Logik ist bewusst nicht enthalten.
