@@ -43,6 +43,11 @@ class BookooDeviceState:
     flow_rate_smoothing: int = 0
     stop_condition: int = 0
 
+    @property
+    def weight_unit(self) -> UnitMass:
+        """Compatibility alias for integrations expecting `weight_unit`."""
+        return self.units
+
 
 class BookooScale:
     """Repräsentation einer Bookoo-Waage."""
