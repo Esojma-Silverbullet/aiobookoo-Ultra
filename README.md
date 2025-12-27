@@ -21,8 +21,8 @@ Paket.
 ## Installation
 
 * Veröffentlichung (PyPI): `pip install aiobookoo-ultra`
-* Aus Git-Tag (z. B. 0.1.2):\
-  `pip install git+https://github.com/Esojma-Silverbullet/aiobookoo-Ultra.git@0.1.2`
+* Aus Git-Tag (z. B. 0.1.3):\
+  `pip install git+https://github.com/Esojma-Silverbullet/aiobookoo-Ultra.git@0.1.3`
 
 Nach der Installation steht das Modul ohne weitere Anpassungen zur Verfügung;
 weitere Framework-spezifische Logik ist bewusst nicht enthalten.
