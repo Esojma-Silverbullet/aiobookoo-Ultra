@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from bleak import BleakClient, BleakGATTCharacteristic, BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
+from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 
 from .const import (
     CHARACTERISTIC_UUID_WEIGHT,
@@ -239,13 +240,24 @@ class BookooScale:
             )
             return
 
-        self._client = BleakClient(
-            address_or_ble_device=self.address_or_ble_device,
-            disconnected_callback=self.device_disconnected_handler,
-        )
-
         try:
-            await self._client.connect()
+            ble_device = self.address_or_ble_device
+            try:
+                self._client = await establish_connection(
+                    ble_device,
+                    disconnected_callback=self.device_disconnected_handler,
+                    name="bookoo",
+                    timeout=20.0,
+                )
+            except TypeError:
+                client = BleakClientWithServiceCache(ble_device)
+                self._client = await establish_connection(
+                    client,
+                    ble_device,
+                    disconnected_callback=self.device_disconnected_handler,
+                    name="bookoo",
+                    timeout=20.0,
+                )
         except BleakError as ex:
             msg = "Error during connecting to device"
             _LOGGER.debug("%s: %s", msg, ex)
